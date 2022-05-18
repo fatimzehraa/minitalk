@@ -6,7 +6,7 @@
 /*   By: fael-bou <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/16 19:31:45 by fael-bou          #+#    #+#             */
-/*   Updated: 2022/05/16 20:07:17 by fael-bou         ###   ########.fr       */
+/*   Updated: 2022/05/18 21:13:13 by fael-bou         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,11 +16,27 @@
 #include <sys/signal.h>
 #include <unistd.h>
 
-void decode(int signo, siginfo_t *infos, void *ptr)
+void	ft_putnbr(int n)
 {
-	static int k = 8;
-	static char c;
-	static pid_t old_pid = -1;
+	char	number;
+
+	if (n >= 0 && n < 10)
+	{
+		number = n + '0';
+		write(1, &number, 1);
+	}
+	else if (n >= 10)
+	{
+		ft_putnbr(n / 10);
+		ft_putnbr(n % 10);
+	}
+}
+
+void	decode(int signo, siginfo_t *infos, void *ptr)
+{
+	static int		k = 8;
+	static char		c;
+	static pid_t	old_pid = -1;
 
 	(void)ptr;
 	if (infos->si_pid != old_pid)
@@ -35,24 +51,26 @@ void decode(int signo, siginfo_t *infos, void *ptr)
 	if (k == 0)
 	{
 		if (c == '\0')
-			printf("\nsafi ra salina.. safi ra salaw!");
+		{
+			kill(infos->si_pid, SIGUSR2);
+		}
 		k = 8;
 		write(1, &c, 1);
 		c = 0;
 	}
 }
-// 01 00 11 10
-int main ()
+
+int	main(void)
 {
-	struct sigaction act;
+	struct sigaction	act;
 
 	act.sa_sigaction = decode;
 	act.sa_flags = SA_SIGINFO;
 	sigemptyset(&act.sa_mask);
 	sigaction(SIGUSR1, &act, NULL);
 	sigaction(SIGUSR2, &act, NULL);
-
-	printf("%d\n", getpid());
-	while(1)
+	ft_putnbr(getpid());
+	write(1, "\n", 1);
+	while (1)
 		pause();
 }
